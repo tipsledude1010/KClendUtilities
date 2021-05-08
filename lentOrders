@@ -28,7 +28,7 @@ function httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase) { //defines funct
   return responsedata //causes httpGet(params) to return the JSON object as it's value
 }
 
-function getUserUnsettledUSECASE() {      // a use case for the function above, it will get the active spreadsheet and write the data there
+function getUserUnsettledUSECASE() {      // a use case for the function above, it should get the active spreadsheet and write the data there, ill code that in a sec
   
   var apiKey = "Your Key Here";// initialize the parameters for the httpGet function
   var apiSecret = "your secret Here";
@@ -38,4 +38,5 @@ function getUserUnsettledUSECASE() {      // a use case for the function above, 
 
   var result = httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase); //calls function defined above using the parameters i just defined
 
+  logger.log(result)
 }
