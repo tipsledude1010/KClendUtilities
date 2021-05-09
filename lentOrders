@@ -61,3 +61,11 @@ function getUserUnsettledUSECASE() {      // a use case for the function above, 
   ss.getRange("A2:F1000").clearContent();     //clears the vlaues but not the formatting in the range before writing
   ss.getRange(2, 1, writeArray.length, 6).setValues(writeArray); //sets a range on the sheet at A1 to the size of array and writes array into those cells
 }
+
+
+function customButton() {  //adds a button on the sheet next to tools, addons, help named "script menu" and you can run the script from there, set custombutton to run on open
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('Script Menu')
+    .addItem('Refresh Lendings', 'getUserUnsettledUSECASE')
+    .addToUi();
+}
