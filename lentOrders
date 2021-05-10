@@ -34,9 +34,9 @@ function httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase) { //defines funct
 
 function getUserOutstandingOrderlist() {      // a use case for the function above, it should get the active spreadsheet and write the data there, ill code that in a sec
   
-  var apiKey = "607bcbab811b230006265ec2";
-  var apiSecret = "3bdf51e7-34ab-4c36-bc65-74464cc1c2ed";
-  var apiPassphrase = "Krazykillerklown666";
+  var apiKey = "your key";
+  var apiSecret = "your secret";
+  var apiPassphrase = "your pass";
   var base = "https://api.kucoin.com" //https://api.kucoin.com  https://openapi-sandbox.kucoin.com
   var endpoint = "/api/v1/margin/lend/trade/unsettled?currency=USDT&currentPage=1&pageSize=50";
 
