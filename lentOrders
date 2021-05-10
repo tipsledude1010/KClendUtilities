@@ -3,6 +3,35 @@ function refreshAll(){
   getUserLentHistory();
 }
 
+function httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase) { //defines function httpGet in which the parameters 'base', 'endpt', 'key', etc are variables defined when the functoion is called, see the second function at the bottom
+
+  var now = UrlFetchApp.fetch("https://api.kucoin.com/api/v1/timestamp").getContentText().toString().slice(24,-1); //LAZY METHOD - pulls current time using a get request which is slow
+  var signable = now + "GET" + endpoint ; // the signable will be run through encryption and contains the timestamp, method, and endpoint
+
+  var signature =  Utilities.base64Encode(Utilities.computeHmacSha256Signature(signable, apiSecret));     //SHA256 and then base 46 encrypt signable using secret
+  var passphrase = Utilities.base64Encode(Utilities.computeHmacSha256Signature(apiPassphrase, apiSecret));// same deal, encrypt passhraze with the secret
+
+  var headers = {       // will be used in the payload in the request
+    "KC-API-KEY":apiKey,  // "KC-API-KEY=yourKey"
+    "KC-API-SIGN":signature,  //something like KC-API-SIGN=HHcLJqoioYGuvBLgO&tBitguvoh9T8iYVi6fubLIug=,
+    "KC-API-TIMESTAMP":now,   // "KC-API-TIMESTAMP=1620509821897"
+    "KC-API-PASSPHRASE":passphrase,
+    "KC-API-KEY-VERSION":"2"
+    }
+
+  var options = {         // initializes the payload used by the UrlFetchApp utility
+    'method' : 'get',     // sets the method to a string "get" rather than "post"
+    'headers' : headers   // puts 'headers' into the payload for the API service
+    };
+
+  var response = UrlFetchApp.fetch(base + endpoint, options); //sends out a http get request to www.api.kuc.com/lend/unsettled for a page of 50 latest unsettled orders
+
+  var responsetxt = response.getContentText(); // comverts response to text
+  var responsedata = JSON.parse(responsetxt);  // reformats data into json object
+
+  return responsedata //causes httpGet(params) to return the JSON object as it's value
+}
+
 function getUserOutstandingOrderlist() {      // a use case for the function above, it should get the active spreadsheet and write the data there, ill code that in a sec
   
   var apiKey = "607bcbab811b230006265ec2";
