@@ -1,39 +1,14 @@
-
-function httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase) { //defines function httpGet in which the parameters 'base', 'endpt', 'key', etc are variables defined when the functoion is called, see the second function at the bottom
- 
-  var now = UrlFetchApp.fetch("https://api.kucoin.com/api/v1/timestamp").getContentText().toString().slice(24,-1); //LAZY METHOD - pulls current time using a get request which is slow
-  var signable = now + "GET" + endpoint ; // the signable will be run through encryption and contains the timestamp, method, and endpoint
-  
-  var signature =  Utilities.base64Encode(Utilities.computeHmacSha256Signature(signable, apiSecret));     //SHA256 and then base 46 encrypt signable using secret
-  var passphrase = Utilities.base64Encode(Utilities.computeHmacSha256Signature(apiPassphrase, apiSecret));// same deal, encrypt passhraze with the secret
-
-  var headers = {       // will be used in the payload in the request
-    "KC-API-KEY":apiKey,  // "KC-API-KEY=yourKey"
-    "KC-API-SIGN":signature,  //something like KC-API-SIGN=HHcLJqoioYGuvBLgO&tBitguvoh9T8iYVi6fubLIug=,
-    "KC-API-TIMESTAMP":now,   // "KC-API-TIMESTAMP=1620509821897"
-    "KC-API-PASSPHRASE":passphrase,
-    "KC-API-KEY-VERSION":"2"
-    }
-
-  var options = {         // initializes the payload used by the UrlFetchApp utility
-    'method' : 'get',     // sets the method to a string "get" rather than "post"
-    'headers' : headers   // puts 'headers' into the payload for the API service
-    };
-
-  var response = UrlFetchApp.fetch(base + endpoint, options); //sends out a http get request to www.api.kuc.com/lend/unsettled for a page of 50 latest unsettled orders
-
-  var responsetxt = response.getContentText(); // comverts response to text
-  var responsedata = JSON.parse(responsetxt);  // reformats data into json object
-
-  return responsedata //causes httpGet(params) to return the JSON object as it's value
+function refreshAll(){
+  getUserOutstandingOrderlist();
+  getUserLentHistory();
 }
 
-function getUserUnsettledUSECASE() {      // a use case for the function above, it should get the active spreadsheet and write the data there, ill code that in a sec
+function getUserOutstandingOrderlist() {      // a use case for the function above, it should get the active spreadsheet and write the data there, ill code that in a sec
   
-  var apiKey = "YOUR KEY HERE";
-  var apiSecret = "YOUR SECRET HERE";
-  var apiPassphrase = "YOUR PASS HERE";
-  var base = "https://api.kucoin.com"
+  var apiKey = "607bcbab811b230006265ec2";
+  var apiSecret = "3bdf51e7-34ab-4c36-bc65-74464cc1c2ed";
+  var apiPassphrase = "Krazykillerklown666";
+  var base = "https://api.kucoin.com" //https://api.kucoin.com  https://openapi-sandbox.kucoin.com
   var endpoint = "/api/v1/margin/lend/trade/unsettled?currency=USDT&currentPage=1&pageSize=50";
 
   var resultjson = httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase); //calls function defined above using the parameters i just defined
@@ -63,9 +38,50 @@ function getUserUnsettledUSECASE() {      // a use case for the function above, 
 }
 
 
+function getUserLentHistory() {      // a use case for the function above, it should get the active spreadsheet and write the data there, ill code that in a sec
+  
+  var apiKey = "your key again";
+  var apiSecret = "your secret";
+  var apiPassphrase = "your passphrase";
+  var base = "https://api.kucoin.com" //https://api.kucoin.com  https://openapi-sandbox.kucoin.com
+
+  var pageNumber = 1
+  do {
+  var endpoint = '/api/v1/margin/lend/trade/settled?currency=USDT&currentPage=' + pageNumber + '&pageSize=50';
+
+  var resultjson = httpGet(base,endpoint,apiKey,apiSecret,apiPassphrase); //calls function defined above using the parameters i just defined
+
+  //Logger.log(resultjson.data);   Logger.log(resultjson.data.items);
+
+  var resultOrders = JSON.stringify(resultjson.data.items)  //turns the result into a string and sontinues on the next line for processing out headers
+  .slice(2,-2)    // takes teh string from previous line and cuts off first n last 2chars which are [{}] containers
+  .replace(/"trade.*?size":"/g, '') //removes trade ID which is unique hex number, currency, and "size"
+  .replace(/,"note":null/g, '')
+  .replace(/[a-zA-Z":]+/g, '')  //removes all letters, colons, and quotes
+
+  //Logger.log(JSON.stringify(resultjson.data.items)); Logger.log(resultOrders);
+
+
+  var writeArray = resultOrders.split('},{') //splits the items in result into a a vertical 1 dimensional array of string objects
+
+  for (order in writeArray) { //for every order in the array, 'order' is a variable for the loop incrementing until the length of the array
+    writeArray[order] = writeArray[order].split(","); //rewrites the order in 1d array to be an array of params rather than just a string to make a 2d array fo cols/rows
+    writeArray[order][5] = writeArray[order][5].slice(0,-3)  //cuts the last 4 numbers of the timestamp, use =F2/86400+date(1970,1,1) in cell G2 to get date and copy down
+  }
+
+  //Logger.log(writeArray)
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("testgrounds");  // retreives the spreadsheet that you are using with this script and then the sheet of teh spreadsheet that is named testgrounds, you need to rename this to whatever you named your sheet. Note, sheet does not mean the same as spreadsheet
+  ss.getRange((2 + ( 50 * (pageNumber-1))), 11, writeArray.length, 6).setValues(writeArray); //sets a range on the sheet at A1 to the size of array and writes array into those cells
+  
+  pageNumber++
+  } while (writeArray.length == 50);
+}
+
+
 function customButton() {  //adds a button on the sheet next to tools, addons, help named "script menu" and you can run the script from there, set custombutton to run on open
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Script Menu')
-    .addItem('Refresh Lendings', 'getUserUnsettledUSECASE')
+    .addItem('Refresh Lendings', 'refreshAll')
     .addToUi();
 }
