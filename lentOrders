@@ -83,15 +83,15 @@ function getUserLentHistory() {      // a use case for the function above, it sh
   //Logger.log(resultjson.data);   Logger.log(resultjson.data.items);
 
   var resultOrders = JSON.stringify(resultjson.data.items)  //turns the result into a string and sontinues on the next line for processing out headers
-  .slice(2,-2)    // takes teh string from previous line and cuts off first n last 2chars which are [{}] containers
   .replace(/"trade.*?size":"/g, '') //removes trade ID which is unique hex number, currency, and "size"
-  .replace(/,"note":null/g, '')
+  .replace(/(?<=\,"note)(.*?)(?=\})/g, '')
   .replace(/[a-zA-Z":]+/g, '')  //removes all letters, colons, and quotes
-
+  .slice(2,-3)    // takes teh string from previous line and cuts off first n last 2chars which are [{}] containers
+  
   //Logger.log(JSON.stringify(resultjson.data.items)); Logger.log(resultOrders);
 
 
-  var writeArray = resultOrders.split('},{') //splits the items in result into a a vertical 1 dimensional array of string objects
+  var writeArray = resultOrders.split(',},{') //splits the items in result into a a vertical 1 dimensional array of string objects
 
   for (order in writeArray) { //for every order in the array, 'order' is a variable for the loop incrementing until the length of the array
     writeArray[order] = writeArray[order].split(","); //rewrites the order in 1d array to be an array of params rather than just a string to make a 2d array fo cols/rows
